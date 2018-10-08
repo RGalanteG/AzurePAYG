@@ -1,0 +1,428 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "CuentaDeAlmacenamiento": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "idDiscoDeDatos": {
+      "defaultValue": "/subscriptions/f839bbad-2a16-4494-927c-ec2486179dd8/resourceGroups/VFRG01/providers/Microsoft.Compute/disks/DATADISKP6",
+      "type": "String"
+    }
+  },
+  "variables": {
+    "vaultName": "VFvault",
+    "backupFabric": "Azure",
+    "vmName": "IaaSS01",
+    "resourceGroupName": "VFRG01",
+    "backupPolicyName": "DefaultPolicy",
+    "protectionContainer": "[concat('iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', variables('vmName'))]",
+    "protectedItem": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('vmName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/disks",
+      "name": "DATADISKP6",
+      "location": "West Europe",
+      "properties": {
+        "creationData": {
+          "createOption": "empty"
+        },
+        "diskSizeGB": "64",
+        "osType": "Windows"
+      },
+      "sku": {
+        "name": "Premium_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "IaaSS01",
+      "apiVersion": "2017-12-01",
+      "location": "westeurope",
+      "identity": {
+        "principalId": null,
+        "tenantId": null,
+        "type": "SystemAssigned"
+      },
+      "scale": null,
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_B1ms"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "diskSizeGB": 127
+          },
+          "dataDisks": [
+            {
+              "lun": 0,
+              "name": "DATADISKP6",
+              "createOption": "Attach",
+              "caching": "None",
+              "managedDisk": {
+                "storageAccountType": "Premium_LRS",
+                "id": "[parameters('idDiscoDeDatos')]"
+              },
+              "diskSizeGB": 64
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "IaaSS01",
+          "adminUsername": "Administrador",
+          "adminPassword": "Password2018",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": []
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'NIC01')]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat('https', '://', parameters('CuentaDeAlmacenamiento'), '.blob.core.windows.net', '/')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', 'NIC01')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('CuentaDeAlmacenamiento'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "NIC01",
+      "apiVersion": "2018-02-01",
+      "location": "westeurope",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "8c5299fa-1891-4e2e-abef-c59469b7da7d",
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "etag": "W/\"7202ab9f-345e-4316-95ee-9cf68882abec\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "privateIPAddress": "10.0.0.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'IaaSS01-ip')]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'VNet01'), '/subnets/default')]"
+              },
+              "primary": true,
+              "privateIPAddressVersion": "IPv4"
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [],
+          "appliedDnsServers": [],
+          "internalDomainNameSuffix": "csucj0awar5udg2jbsu1l2xcsf.ax.internal.cloudapp.net"
+        },
+        "macAddress": "00-0D-3A-28-80-B1",
+        "enableAcceleratedNetworking": false,
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'IaaSS01-nsg')]"
+        },
+        "primary": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', 'IaaSS01-ip')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', 'VNet01')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'IaaSS01-nsg')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "IaaSS01-nsg",
+      "apiVersion": "2018-02-01",
+      "location": "westeurope",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "cf37ac0f-4035-4203-b97d-08d2a1f99833",
+        "securityRules": [
+          {
+            "name": "RDP",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 300,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          }
+        ],
+        "defaultSecurityRules": [
+          {
+            "name": "AllowVnetInBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Allow inbound traffic from all VMs in VNET",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 65000,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AllowAzureLoadBalancerInBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Allow inbound traffic from azure load balancer",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "AzureLoadBalancer",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 65001,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "DenyAllInBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Deny all inbound traffic",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 65500,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AllowVnetOutBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Allow outbound traffic from all VMs to all VMs in VNET",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 65000,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AllowInternetOutBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Allow outbound traffic from all VMs to Internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 65001,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "DenyAllOutBound",
+            "etag": "W/\"8c3224ab-0b56-44b2-a6ea-4dbc7603cb65\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Deny all outbound traffic",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 65500,
+              "direction": "Outbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          }
+        ]
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "sku": {
+        "name": "Basic",
+        "tier": "Regional"
+      },
+      "name": "IaaSS01-ip",
+      "apiVersion": "2018-02-01",
+      "location": "westeurope",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "8f6c6305-3a3f-4eaa-a0a5-1b0a5c6cd82b",
+        "ipAddress": "40.114.199.190",
+        "publicIPAddressVersion": "IPv4",
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4,
+        "ipTags": []
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "VNet01",
+      "apiVersion": "2018-02-01",
+      "location": "westeurope",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "e824a814-0416-417f-9b89-0ca9b5f2e295",
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/24"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "etag": "W/\"96ec73ff-aa10-4cd8-a209-feb9851b222c\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "addressPrefix": "10.0.0.0/24"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": [],
+        "enableDdosProtection": false,
+        "enableVmProtection": false
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+      },
+      "name": "VFvault",
+      "apiVersion": "2018-01-10",
+      "location": "westeurope",
+      "scale": null,
+      "properties": {},
+      "dependsOn": []
+    },
+    {
+      "apiVersion": "2016-12-01",
+      "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
+      "name": "[concat(variables('vaultName'), '/', variables('backupFabric'), '/', variables('protectionContainer'), '/', variables('protectedItem'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]",
+        "[resourceId('Microsoft.RecoveryServices/vaults/', variables('vaultName'))]"
+      ],
+      "properties": {
+        "protectedItemType": "Microsoft.Compute/virtualMachines",
+        "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', variables('vaultName'), variables('backupPolicyName'))]",
+        "sourceResourceId": "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[parameters('CuentaDeAlmacenamiento')]",
+      "apiVersion": "2018-03-01-preview",
+      "location": "westeurope",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "dependsOn": []
+    }
+  ]
+    }
