@@ -1,4 +1,8 @@
-<tr><th>Prioridad</th><th>Consumible</th><th>Precio unitario</th><th>Cantidad</th><th>Subtotal</th></tr>
+<!DOCTYPE html>
+<html>
+<head>
+    <thead>
+      <tr><th>Prioridad</th><th>Consumible</th><th>Precio unitario</th><th>Cantidad</th><th>Subtotal</th></tr>
     </thead>
     <tbody>
       <tr><td>Urgente</td><td>Arroz [bolsa de 2kg]</td><td>₡2.500,00</td><td>1</td><td>₡2.500,00</td></tr>
