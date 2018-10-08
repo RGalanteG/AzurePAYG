@@ -1,42 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="author" content="JMSR">
-  <title>Lista de compras</title>
-  <style>
-    table
-    {
-      border-collapse: collapse;
-      font-family: "Courier New";
-    }
-    caption
-    {
-      font-family: "Verdana";
-      font-size: 12px;
-      font-style: italic;
-      margin-bottom: 10px;
-    }
-    th, td
-    {
-     padding-left: 10px;
-     padding-right: 10px;
-    }
-    th { background-color: #D4D4BF; }
-    td { text-align: right; }
-    tbody td { border-bottom: 1px dotted; }
-    tfoot td
-    {
-      border-top: 2px solid;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <table>
-    <caption>Lista de compras para el sábado, 07 de julio de 2012</caption>
-    <thead>
-      <tr><th>Prioridad</th><th>Consumible</th><th>Precio unitario</th><th>Cantidad</th><th>Subtotal</th></tr>
+<tr><th>Prioridad</th><th>Consumible</th><th>Precio unitario</th><th>Cantidad</th><th>Subtotal</th></tr>
     </thead>
     <tbody>
       <tr><td>Urgente</td><td>Arroz [bolsa de 2kg]</td><td>₡2.500,00</td><td>1</td><td>₡2.500,00</td></tr>
