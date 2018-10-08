@@ -7,7 +7,7 @@
       "type": "String"
     },
     "idDiscoDeDatos": {
-      "defaultValue": "/subscriptions/f839bbad-2a16-4494-927c-ec2486179dd8/resourceGroups/VFRG01/providers/Microsoft.Compute/disks/DATADISKP6",
+      "defaultValue": "/subscriptions/*/resourceGroups/VFRG01/providers/Microsoft.Compute/disks/DATADISKP6",
       "type": "String"
     }
   },
